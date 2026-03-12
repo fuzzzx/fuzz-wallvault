@@ -558,7 +558,12 @@ footer strong { color: var(--accent); }
 }
 .bulk-del-btn:hover { background: rgba(239,68,68,0.2); }
 .tbl-check { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
-
+@media(max-width:600px){
+  .nav-links a { font-size: 0.72rem; padding: 0.3rem 0.5rem; }
+  .upload-btn { font-size: 0.75rem; padding: 0.4rem 0.8rem; }
+  .stats { gap: 1rem; }
+  .stat-num { font-size: 1.2rem; }
+}
 .toast {
   position: fixed; bottom: 2rem; right: 2rem; z-index: 999;
   background: var(--accent); color: white;
