@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fuzz - WallVault — Free Wallpapers</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f0f8ff;
+  --surface: #ffffff;
+  --card: #e8f4fd;
+  --border: rgba(14,120,200,0.12);
+  --text: #0d2137;
+  --muted: #5a88aa;
+  --accent: #0e78c8;
+  --accent2: #38bdf8;
+  --accent3: #0ea5e9;
+  --grad: linear-gradient(135deg, #0e78c8, #38bdf8);
+  --grad2: linear-gradient(135deg, #0ea5e9, #7dd3fc);
+  --shadow: 0 4px 24px rgba(14,120,200,0.10);
+  --shadow-lg: 0 8px 40px rgba(14,120,200,0.18);
+}
+.dark {
+  --bg: #060e17;
+  --surface: #0d1f2d;
+  --card: #0f2436;
+  --border: rgba(56,189,248,0.10);
+  --text: #e0f2fe;
+  --muted: #7ab5d4;
+  --shadow: 0 4px 24px rgba(0,0,0,0.35);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--accent2); border-radius: 3px; }
+
+/* NAV */
+nav {
+  position: sticky; top: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem; height: 64px;
+  background: rgba(240,248,255,0.88);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.3s;
+}
+.dark nav { background: rgba(6,14,23,0.88); }
+
+.logo {
+  font-weight: 800; font-size: 1.5rem; letter-spacing: -0.03em;
+  background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  cursor: pointer;
+}
+
+.nav-links { display: flex; gap: 0.25rem; list-style: none; }
+.nav-links a {
+  color: var(--muted); text-decoration: none;
+  font-size: 0.875rem; font-weight: 500;
+  padding: 0.4rem 0.9rem; border-radius: 8px;
+  transition: all 0.2s; cursor: pointer;
+}
+.nav-links a:hover, .nav-links a.active { color: var(--accent); background: rgba(14,120,200,0.08); }
+
+.nav-right { display: flex; align-items: center; gap: 0.75rem; }
+
+.theme-btn {
+  width: 38px; height: 38px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--card);
+  color: var(--text); font-size: 1rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.theme-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+.upload-btn {
+  padding: 0.45rem 1.2rem;
+  background: var(--grad); border: none;
+  color: white; border-radius: 10px;
+  font-size: 0.875rem; font-weight: 600;
+  cursor: pointer; transition: opacity 0.2s, transform 0.2s;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.upload-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+/* PAGES */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── HOME PAGE ── */
+.hero {
+  position: relative; overflow: hidden;
+  padding: 5rem 2rem 4rem; text-align: center;
+  background: linear-gradient(180deg, rgba(14,120,200,0.06) 0%, transparent 100%);
+}
+.hero::before {
+  content: '';
+  position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
+  width: 700px; height: 500px;
+  background: radial-gradient(ellipse, rgba(56,189,248,0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  background: rgba(14,120,200,0.08); border: 1px solid rgba(14,120,200,0.2);
+  color: var(--accent); padding: 0.3rem 0.9rem; border-radius: 20px;
+  font-size: 0.8rem; font-weight: 600; margin-bottom: 1.5rem;
+  animation: fadeUp 0.6s ease both;
+}
+
+h1 {
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  font-weight: 800; letter-spacing: -0.04em;
+  line-height: 1.1; margin-bottom: 1.2rem;
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+h1 span { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+.hero-sub {
+  color: var(--muted); font-size: 1.05rem; max-width: 500px;
+  margin: 0 auto 2.5rem; line-height: 1.6;
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+
+/* SEARCH */
+.search-wrap {
+  max-width: 580px; margin: 0 auto 1.5rem;
+  position: relative; animation: fadeUp 0.6s 0.3s ease both;
+}
+.search-wrap input {
+  width: 100%; padding: 1rem 1.5rem 1rem 3.2rem;
+  background: var(--surface); border: 2px solid var(--border);
+  border-radius: 16px; font-size: 0.95rem;
+  color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: var(--shadow);
+}
+.search-wrap input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(14,120,200,0.12); }
+.search-wrap input::placeholder { color: var(--muted); }
+.search-icon {
+  position: absolute; left: 1.1rem; top: 50%; transform: translateY(-50%);
+  color: var(--muted); font-size: 1rem; pointer-events: none;
+}
+.search-btn {
+  position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%);
+  padding: 0.55rem 1.2rem; background: var(--grad);
+  border: none; color: white; border-radius: 12px;
+  font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif; transition: opacity 0.2s;
+}
+.search-btn:hover { opacity: 0.88; }
+
+/* STATS */
+.stats {
+  display: flex; justify-content: center; gap: 3rem;
+  margin-bottom: 4rem; animation: fadeUp 0.6s 0.4s ease both;
+}
+.stat { text-align: center; }
+.stat-num { font-size: 1.6rem; font-weight: 800; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.stat-label { font-size: 0.78rem; color: var(--muted); font-weight: 500; margin-top: 0.1rem; }
+
+/* SECTION */
+.section { padding: 0 2rem 4rem; max-width: 1400px; margin: 0 auto; }
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+.section-title {
+  font-size: 1.3rem; font-weight: 700; letter-spacing: -0.02em;
+}
+.see-all {
+  color: var(--accent); font-size: 0.85rem; font-weight: 600;
+  text-decoration: none; cursor: pointer; transition: opacity 0.2s;
+}
+.see-all:hover { opacity: 0.7; }
+
+/* CATEGORIES */
+.cats-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem; margin-bottom: 3rem;
+}
+.cat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.1rem 1rem; text-align: center;
+  cursor: pointer; transition: all 0.22s; position: relative; overflow: hidden;
+}
+.cat-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--grad); opacity: 0; transition: opacity 0.22s;
+}
+.cat-card:hover::before { opacity: 0.07; }
+.cat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: rgba(14,120,200,0.3); }
+.cat-card.active-cat { border-color: var(--accent); background: rgba(14,120,200,0.06); }
+.cat-icon { font-size: 1.6rem; margin-bottom: 0.4rem; display: block; }
+.cat-name { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+.cat-count { font-size: 0.72rem; color: var(--muted); margin-top: 0.15rem; }
+
+/* FILTER BAR */
+.filter-bar {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-bottom: 1.5rem; flex-wrap: wrap;
+}
+.filter-chip {
+  padding: 0.4rem 1rem; border-radius: 20px;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--muted); font-size: 0.82rem; font-weight: 500;
+  cursor: pointer; transition: all 0.2s;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.filter-chip:hover, .filter-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* WALLPAPER GRID */
+.wall-grid {
+  columns: 4; column-gap: 1rem;
+}
+@media(max-width:1100px){ .wall-grid { columns: 3; } }
+@media(max-width:750px){ .wall-grid { columns: 2; } }
+@media(max-width:480px){ .wall-grid { columns: 1; } }
+
+.wall-card {
+  break-inside: avoid; margin-bottom: 1rem;
+  border-radius: 16px; overflow: hidden;
+  position: relative; cursor: pointer;
+  box-shadow: var(--shadow); transition: transform 0.25s, box-shadow 0.25s;
+}
+.wall-card:hover { transform: translateY(-4px) scale(1.01); box-shadow: var(--shadow-lg); }
+.wall-card img {
+  width: 100%; display: block;
+  transition: transform 0.4s;
+}
+.wall-card:hover img { transform: scale(1.04); }
+
+.wall-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(6,14,23,0.75) 0%, transparent 50%);
+  opacity: 0; transition: opacity 0.25s;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 1rem;
+}
+.wall-card:hover .wall-overlay { opacity: 1; }
+
+.wall-title { color: white; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; }
+.wall-actions { display: flex; gap: 0.5rem; }
+
+.wall-btn {
+  padding: 0.4rem 0.8rem; border-radius: 8px;
+  font-size: 0.75rem; font-weight: 600; cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s;
+  border: none;
+}
+.wall-btn.download { background: var(--grad); color: white; }
+.wall-btn.preview { background: rgba(255,255,255,0.18); color: white; backdrop-filter: blur(8px); }
+.wall-btn:hover { transform: scale(1.05); }
+
+.badge {
+  position: absolute; top: 0.7rem; left: 0.7rem;
+  padding: 0.2rem 0.6rem; border-radius: 6px;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em;
+}
+.badge.new { background: #22c55e; color: white; }
+.badge.trending { background: #f97316; color: white; }
+
+.download-count {
+  position: absolute; top: 0.7rem; right: 0.7rem;
+  background: rgba(0,0,0,0.45); backdrop-filter: blur(8px);
+  color: white; padding: 0.2rem 0.55rem; border-radius: 6px;
+  font-size: 0.7rem; font-weight: 500;
+}
+
+/* LOAD MORE */
+.load-more-wrap { text-align: center; padding: 2rem 0; }
+.load-more {
+  padding: 0.75rem 2.5rem;
+  background: transparent; border: 2px solid var(--accent);
+  color: var(--accent); border-radius: 12px;
+  font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s;
+}
+.load-more:hover { background: var(--accent); color: white; }
+
+/* MODAL - PREVIEW */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: rgba(6,14,23,0.92); backdrop-filter: blur(12px);
+  align-items: center; justify-content: center; padding: 1.5rem;
+}
+.modal-overlay.open { display: flex; animation: fadeIn 0.25s ease; }
+
+.modal {
+  background: var(--surface); border-radius: 20px;
+  max-width: 900px; width: 100%; overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+  animation: scaleIn 0.25s ease;
+}
+.modal-img { width: 100%; max-height: 500px; object-fit: cover; display: block; }
+.modal-body { padding: 1.5rem; }
+.modal-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; }
+.modal-meta { display: flex; gap: 1.5rem; margin-bottom: 1rem; }
+.modal-meta span { font-size: 0.82rem; color: var(--muted); }
+.modal-meta span strong { color: var(--text); font-weight: 600; }
+.modal-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.tag {
+  padding: 0.25rem 0.7rem; border-radius: 6px;
+  background: rgba(14,120,200,0.1); color: var(--accent);
+  font-size: 0.75rem; font-weight: 600;
+}
+.modal-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+.res-select {
+  padding: 0.5rem 0.9rem; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--card);
+  color: var(--text); font-size: 0.85rem; font-weight: 500;
+  font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer;
+}
+.dl-btn {
+  padding: 0.6rem 1.6rem; background: var(--grad);
+  border: none; color: white; border-radius: 10px;
+  font-size: 0.9rem; font-weight: 700; cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif; transition: opacity 0.2s;
+}
+.dl-btn:hover { opacity: 0.88; }
+.share-btn {
+  padding: 0.6rem 1.2rem;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text); border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+  cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s;
+}
+.share-btn:hover { border-color: var(--accent); color: var(--accent); }
+.modal-close {
+  float: right; background: var(--card); border: none;
+  width: 36px; height: 36px; border-radius: 8px;
+  color: var(--text); font-size: 1rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+.modal-close:hover { background: rgba(239,68,68,0.15); color: #ef4444; }
+
+/* ADMIN LOCK */
+.admin-lock {
+  max-width: 400px; margin: 6rem auto; padding: 2.5rem 2rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 24px; text-align: center; box-shadow: var(--shadow-lg);
+}
+.admin-lock .lock-icon { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
+.admin-lock h3 { font-size: 1.3rem; font-weight: 800; margin-bottom: 0.4rem; }
+.admin-lock p { color: var(--muted); font-size: 0.875rem; margin-bottom: 1.5rem; }
+.admin-lock input {
+  width: 100%; padding: 0.75rem 1rem; border-radius: 12px;
+  border: 1px solid var(--border); background: var(--card);
+  color: var(--text); font-size: 0.95rem; font-family: 'Plus Jakarta Sans', sans-serif;
+  margin-bottom: 1rem; text-align: center; letter-spacing: 0.05em;
+}
+.admin-lock input:focus { outline: none; border-color: var(--accent); }
+.lock-err { color: #ef4444; font-size: 0.82rem; margin-top: -0.5rem; margin-bottom: 0.75rem; display: none; }
+
+/* ADMIN PAGE */
+.admin-wrap { max-width: 800px; margin: 0 auto; padding: 3rem 2rem; }
+.admin-wrap h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.4rem; letter-spacing: -0.03em; }
+.admin-wrap p { color: var(--muted); margin-bottom: 2rem; }
+
+.upload-zone {
+  border: 2px dashed rgba(14,120,200,0.35); border-radius: 20px;
+  padding: 3rem 2rem; text-align: center;
+  background: rgba(14,120,200,0.03); cursor: pointer;
+  transition: all 0.25s; margin-bottom: 2rem;
+}
+.upload-zone:hover { border-color: var(--accent); background: rgba(14,120,200,0.07); }
+.upload-zone .up-icon { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; }
+.upload-zone p { color: var(--muted); margin-bottom: 0.5rem; }
+.upload-zone strong { color: var(--accent); }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+.form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.form-group label { font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+.form-group input, .form-group select, .form-group textarea {
+  padding: 0.7rem 1rem; border-radius: 12px;
+  border: 1px solid var(--border); background: var(--card);
+  color: var(--text); font-size: 0.875rem;
+  font-family: 'Plus Jakarta Sans', sans-serif; transition: border-color 0.2s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  outline: none; border-color: var(--accent);
+}
+.form-group textarea { resize: vertical; min-height: 80px; }
+.form-full { grid-column: 1 / -1; }
+
+.submit-btn {
+  width: 100%; padding: 0.85rem;
+  background: var(--grad); border: none; color: white;
+  border-radius: 14px; font-size: 1rem; font-weight: 700;
+  cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: opacity 0.2s, transform 0.2s; margin-top: 0.5rem;
+}
+.submit-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+/* MANAGE TABLE */
+.manage-section { margin-top: 3rem; }
+.manage-section h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; }
+.wall-table { width: 100%; border-collapse: collapse; }
+.wall-table th {
+  text-align: left; padding: 0.75rem 1rem;
+  font-size: 0.78rem; font-weight: 700; color: var(--muted);
+  border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.05em;
+}
+.wall-table td {
+  padding: 0.85rem 1rem; font-size: 0.85rem;
+  border-bottom: 1px solid var(--border); vertical-align: middle;
+}
+.wall-table tr:hover td { background: rgba(14,120,200,0.04); }
+.wall-table img { width: 56px; height: 40px; object-fit: cover; border-radius: 8px; }
+.tbl-btn {
+  padding: 0.3rem 0.75rem; border-radius: 7px;
+  font-size: 0.75rem; font-weight: 600; cursor: pointer; border: none;
+  font-family: 'Plus Jakarta Sans', sans-serif; margin-right: 0.4rem; transition: opacity 0.2s;
+}
+.tbl-btn.edit { background: rgba(14,120,200,0.12); color: var(--accent); }
+.tbl-btn.del { background: rgba(239,68,68,0.1); color: #ef4444; }
+.tbl-btn:hover { opacity: 0.75; }
+
+/* ABOUT PAGE */
+.about-wrap { max-width: 700px; margin: 0 auto; padding: 4rem 2rem; text-align: center; }
+.about-avatar {
+  width: 96px; height: 96px; border-radius: 50%;
+  background: var(--grad); display: flex; align-items: center; justify-content: center;
+  font-size: 2.2rem; margin: 0 auto 1.5rem; box-shadow: 0 8px 32px rgba(14,120,200,0.3);
+}
+.about-wrap h2 { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.5rem; }
+.about-name { color: var(--accent); font-size: 1.1rem; font-weight: 700; margin-bottom: 1.5rem; }
+.about-desc {
+  color: var(--muted); line-height: 1.8; font-size: 1rem;
+  background: var(--card); border-radius: 18px; padding: 1.8rem;
+  border: 1px solid var(--border); margin-bottom: 2rem; text-align: left;
+}
+.about-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin-bottom: 2rem; }
+.about-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 1.5rem 1rem; text-align: center;
+}
+.about-card .ac-icon { font-size: 1.8rem; margin-bottom: 0.5rem; }
+.about-card h4 { font-weight: 700; margin-bottom: 0.25rem; font-size: 0.9rem; }
+.about-card p { font-size: 0.78rem; color: var(--muted); }
+
+/* CONTACT PAGE */
+.contact-wrap { max-width: 600px; margin: 0 auto; padding: 4rem 2rem; }
+.contact-wrap h2 { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.5rem; }
+.contact-wrap > p { color: var(--muted); margin-bottom: 2.5rem; }
+.contact-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 2rem; margin-bottom: 1.5rem;
+  display: flex; align-items: center; gap: 1.2rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.contact-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.cc-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: rgba(14,120,200,0.12); display: flex;
+  align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;
+}
+.cc-label { font-size: 0.78rem; color: var(--muted); font-weight: 600; margin-bottom: 0.2rem; }
+.cc-val { font-size: 1rem; font-weight: 700; color: var(--accent); }
+
+.contact-form { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; }
+.contact-form h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1.5rem; }
+
+/* FOOTER */
+footer {
+  background: var(--surface); border-top: 1px solid var(--border);
+  padding: 2rem; text-align: center; margin-top: 4rem;
+}
+footer p { color: var(--muted); font-size: 0.82rem; }
+footer strong { color: var(--accent); }
+
+/* ANIMATIONS */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { transform: scale(0.93); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* SKELETON LOADING */
+.skeleton {
+  break-inside: avoid; margin-bottom: 1rem;
+  border-radius: 16px; overflow: hidden;
+  background: var(--card);
+  animation: shimmer 1.4s infinite;
+}
+.skeleton-img { width: 100%; background: var(--border); }
+@keyframes shimmer {
+  0%,100% { opacity: 1; } 50% { opacity: 0.5; }
+}
+
+/* BACK TO TOP */
+.back-to-top {
+  position: fixed; bottom: 2rem; left: 2rem; z-index: 300;
+  width: 44px; height: 44px; border-radius: 12px;
+  background: var(--grad); border: none; color: white;
+  font-size: 1.1rem; cursor: pointer;
+  display: none; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-lg); transition: transform 0.2s, opacity 0.2s;
+}
+.back-to-top.visible { display: flex; animation: fadeUp 0.3s ease; }
+.back-to-top:hover { transform: translateY(-3px); }
+
+/* RELATED WALLPAPERS */
+.related-section { margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.2rem; }
+.related-title { font-size: 0.85rem; font-weight: 700; color: var(--muted); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.related-grid { display: flex; gap: 0.6rem; overflow-x: auto; padding-bottom: 0.3rem; }
+.related-grid::-webkit-scrollbar { height: 3px; }
+.related-grid::-webkit-scrollbar-thumb { background: var(--accent2); border-radius: 2px; }
+.related-item {
+  flex-shrink: 0; width: 90px; height: 64px;
+  border-radius: 8px; overflow: hidden; cursor: pointer;
+  border: 2px solid transparent; transition: border-color 0.2s, transform 0.2s;
+}
+.related-item:hover { border-color: var(--accent); transform: scale(1.05); }
+.related-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ADMIN SEARCH + BULK DELETE */
+.admin-search-row {
+  display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;
+}
+.admin-search-input {
+  flex: 1; padding: 0.6rem 1rem; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--card);
+  color: var(--text); font-size: 0.875rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.admin-search-input:focus { outline: none; border-color: var(--accent); }
+.bulk-del-btn {
+  padding: 0.6rem 1.1rem; border-radius: 10px;
+  background: rgba(239,68,68,0.1); color: #ef4444;
+  border: 1px solid rgba(239,68,68,0.2);
+  font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s;
+  white-space: nowrap;
+}
+.bulk-del-btn:hover { background: rgba(239,68,68,0.2); }
+.tbl-check { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+
+.toast {
+  position: fixed; bottom: 2rem; right: 2rem; z-index: 999;
+  background: var(--accent); color: white;
+  padding: 0.75rem 1.5rem; border-radius: 12px;
+  font-size: 0.875rem; font-weight: 600;
+  box-shadow: 0 8px 32px rgba(14,120,200,0.35);
+  animation: fadeUp 0.3s ease;
+  display: none;
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo" onclick="showPage('home')">Fuzz - WallVault</div>
+  <ul class="nav-links">
+    <li><a onclick="showPage('home')" class="active" id="nav-home">Home</a></li>
+    <li><a onclick="showPage('gallery')" id="nav-gallery">Gallery</a></li>
+    <li><a onclick="showPage('about')" id="nav-about">About</a></li>
+    <li><a onclick="showPage('contact')" id="nav-contact">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+    <button class="upload-btn" onclick="showPage('admin')">⬆ Upload</button>
+  </div>
+</nav>
+
+<!-- ═══════════ HOME ═══════════ -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-tag">✨ 100% Free Downloads</div>
+    <h1>Beautiful Wallpapers<br><span>For Everyone</span></h1>
+    <p class="hero-sub">Discover thousands of stunning, high-quality wallpapers. Download in any resolution — completely free, no signup needed.</p>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Search wallpapers… sky, anime, cars, space…" id="heroSearch" oninput="liveSearch(this.value)">
+      <button class="search-btn" onclick="doSearch()">Search</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-num">2,400+</div><div class="stat-label">Wallpapers</div></div>
+      <div class="stat"><div class="stat-num">18</div><div class="stat-label">Categories</div></div>
+      <div class="stat"><div class="stat-num">4K</div><div class="stat-label">Max Resolution</div></div>
+      <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Free</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">🗂 Browse Categories</div>
+    </div>
+    <div class="cats-grid" id="homeCats"></div>
+
+    <div class="section-header">
+      <div class="section-title">🔥 Trending Now</div>
+      <a class="see-all" onclick="showPage('gallery')">See all →</a>
+    </div>
+    <div class="filter-bar">
+      <button class="filter-chip active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-chip" onclick="setFilter('newest',this)">Newest</button>
+      <button class="filter-chip" onclick="setFilter('popular',this)">Most Popular</button>
+      <button class="filter-chip" onclick="setFilter('downloads',this)">Most Downloaded</button>
+    </div>
+    <div class="wall-grid" id="homeGrid"></div>
+    <div class="load-more-wrap">
+      <button class="load-more" onclick="showPage('gallery')">Load More Wallpapers</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ GALLERY ═══════════ -->
+<div class="page" id="page-gallery">
+  <div class="section" style="padding-top:2.5rem;">
+    <div class="section-header">
+      <div class="section-title">🖼 All Wallpapers</div>
+    </div>
+    <div class="cats-grid" id="galleryCats"></div>
+    <div class="filter-bar" style="margin-top:0.5rem;">
+      <button class="filter-chip active" onclick="setGalleryFilter('all',this)">All</button>
+      <button class="filter-chip" onclick="setGalleryFilter('newest',this)">Newest</button>
+      <button class="filter-chip" onclick="setGalleryFilter('popular',this)">Popular</button>
+      <button class="filter-chip" onclick="setGalleryFilter('downloads',this)">Downloads</button>
+    </div>
+    <div class="search-wrap" style="max-width:420px;margin:0 0 1.5rem;">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Search…" id="gallerySearch" oninput="filterGallery()">
+    </div>
+    <div class="wall-grid" id="galleryGrid"></div>
+  </div>
+</div>
+
+<!-- ═══════════ ADMIN ═══════════ -->
+<div class="page" id="page-admin">
+
+  <!-- LOCK SCREEN -->
+  <div id="adminLock">
+    <div class="admin-lock">
+      <span class="lock-icon">🔐</span>
+      <h3>Admin Access</h3>
+      <p>Enter password to access the upload panel</p>
+      <input type="password" id="adminPwdInput" placeholder="Enter password…" onkeydown="if(event.key==='Enter')checkAdminPwd()">
+      <div class="lock-err" id="lockErr">❌ Wrong password. Try again.</div>
+      <button class="submit-btn" onclick="checkAdminPwd()">Unlock 🔓</button>
+    </div>
+  </div>
+
+  <!-- ACTUAL ADMIN PANEL (hidden until unlocked) -->
+  <div class="admin-wrap" id="adminPanel" style="display:none;">
+    <h2>⬆ Upload Wallpaper</h2>
+    <p>Add new wallpapers to the collection</p>
+    <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+      <span class="up-icon">🖼</span>
+      <p><strong>Click to upload</strong> or drag & drop</p>
+      <p style="font-size:0.78rem">PNG, JPG, WEBP · Max 20MB</p>
+      <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="previewUpload(this)">
+    </div>
+    <img id="uploadPreview" style="width:100%;border-radius:14px;margin-bottom:1rem;display:none;max-height:280px;object-fit:cover;">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="upTitle" placeholder="e.g. Sunset Over Ocean">
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="upCat">
+          <option>Nature</option><option>Space</option><option>Abstract</option>
+          <option>Cars</option><option>Anime</option><option>Dark</option>
+          <option>Minimal</option><option>Architecture</option><option>Animals</option>
+          <option>Sky</option><option>Ocean</option><option>Mountains</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Resolution</label>
+        <select id="upRes">
+          <option>4K (3840×2160)</option>
+          <option>2K (2560×1440)</option>
+          <option>1080p (1920×1080)</option>
+          <option>Mobile (1080×1920)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Badge</label>
+        <select id="upBadge">
+          <option value="">None</option>
+          <option value="new">New</option>
+          <option value="trending">Trending</option>
+        </select>
+      </div>
+      <div class="form-group form-full">
+        <label>Tags (comma separated)</label>
+        <input type="text" id="upTags" placeholder="sunset, blue, sky, nature">
+      </div>
+    </div>
+    <button class="submit-btn" onclick="uploadWallpaper()">⬆ Upload Wallpaper</button>
+
+    <div class="manage-section">
+      <h3>📋 Manage Wallpapers</h3>
+      <div class="admin-search-row">
+        <input class="admin-search-input" type="text" id="adminSearchInput" placeholder="🔍 Search wallpapers…" oninput="renderManageTable()">
+        <button class="bulk-del-btn" onclick="bulkDelete()">🗑 Delete Selected</button>
+      </div>
+      <table class="wall-table">
+        <thead>
+          <tr><th><input type="checkbox" class="tbl-check" id="checkAll" onchange="toggleCheckAll(this)"></th><th>Preview</th><th>Title</th><th>Category</th><th>Downloads</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="manageTable"></tbody>
+      </table>
+    </div>
+  </div>
+  </div><!-- end adminPanel -->
+</div>
+
+<!-- ═══════════ ABOUT ═══════════ -->
+<div class="page" id="page-about">
+  <div class="about-wrap">
+    <div class="about-avatar">👨‍💻</div>
+    <h2>About Fuzz - WallVault</h2>
+    <div class="about-name">Created by Mohamed Faiju</div>
+    <div class="about-desc">
+      <p>Fuzz - WallVault is a passion project built to give everyone access to beautiful, high-quality wallpapers — completely free. No login, no paywalls, just pure creativity.</p>
+      <br>
+      <p>I believe that great design should be accessible to everyone. Whether you're looking for a calming nature scene, a bold abstract, or a jaw-dropping space wallpaper —  has it all, curated with love.</p>
+      <br>
+      <p>This platform is designed to be simple, fast, and beautiful — because your screen deserves the best. 🌊</p>
+    </div>
+    <div class="about-cards">
+      <div class="about-card">
+        <div class="ac-icon">🆓</div>
+        <h4>Always Free</h4>
+        <p>No subscriptions, no hidden fees</p>
+      </div>
+      <div class="about-card">
+        <div class="ac-icon">🖼</div>
+        <h4>HD Quality</h4>
+        <p>Up to 4K resolution downloads</p>
+      </div>
+      <div class="about-card">
+        <div class="ac-icon">⚡</div>
+        <h4>Fast & Simple</h4>
+        <p>No login needed, instant download</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ CONTACT ═══════════ -->
+<div class="page" id="page-contact">
+  <div class="contact-wrap">
+    <h2>📬 Contact Us</h2>
+    <p>Have a question, suggestion, or just want to say hi? We'd love to hear from you!</p>
+    <div class="contact-card">
+      <div class="cc-icon">📧</div>
+      <div>
+        <div class="cc-label">Email Address</div>
+        <div class="cc-val">ractail07@gmail.com</div>
+      </div>
+    </div>
+    <div class="contact-form">
+      <h3>Send a Message</h3>
+      <div class="form-grid" style="grid-template-columns:1fr;">
+        <div class="form-group">
+          <label>Your Name</label>
+          <input type="text" placeholder="Mohamed...">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label>Message</label>
+          <textarea placeholder="Write your message here…"></textarea>
+        </div>
+      </div>
+      <button class="submit-btn" onclick="sendMsg()">Send Message 📨</button>
+    </div>
+  </div>
+</div>
+
+<!-- PREVIEW MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal">
+    <img class="modal-img" id="modalImg" src="" alt="">
+    <div class="modal-body">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem;">
+        <div class="modal-title" id="modalTitle"></div>
+        <button class="modal-close" onclick="closeModalBtn()">✕</button>
+      </div>
+      <div class="modal-meta">
+        <span><strong id="modalCat"></strong> · Category</span>
+        <span><strong id="modalRes"></strong> · Resolution</span>
+        <span><strong id="modalDL"></strong> · Downloads</span>
+      </div>
+      <div class="modal-tags" id="modalTags"></div>
+      <div class="modal-actions">
+        <select class="res-select" id="resSelect">
+          <option>4K (3840×2160)</option>
+          <option>2K (2560×1440)</option>
+          <option>1080p (1920×1080)</option>
+          <option>Mobile (1080×1920)</option>
+        </select>
+        <button class="dl-btn" onclick="downloadWall()">⬇ Download Free</button>
+        <button class="share-btn" onclick="shareWall()">🔗 Share</button>
+      </div>
+      <div class="related-section">
+        <div class="related-title">You may also like</div>
+        <div class="related-grid" id="relatedGrid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">⬆</button>
+
+<footer>
+  <p>Made with 💙 by <strong>Mohamed Faiju</strong> · Fuzz - WallVault © 2026 · All wallpapers free to use</p>
+</footer>
+
+<script type="module">
+// ── FIREBASE + CLOUDINARY CONFIG ──
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBoyrU57zp2zwqWPcor4wpxAYva7CuUKTo",
+  authDomain: "fuzz---wallvault.firebaseapp.com",
+  projectId: "fuzz---wallvault",
+  storageBucket: "fuzz---wallvault.firebasestorage.app",
+  messagingSenderId: "421470488653",
+  appId: "1:421470488653:web:099193004e46a1ed243404"
+};
+
+const CLOUDINARY_CLOUD = "dkxiqgd8v";
+const CLOUDINARY_PRESET = "Fuzz - WallVault";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ── UPLOAD TO CLOUDINARY ──
+async function uploadToCloudinary(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_PRESET);
+  formData.append('folder', 'wallvault');
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+    method: 'POST',
+    body: formData
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return { url: data.secure_url, publicId: data.public_id };
+}
+
+// ── UPLOAD WALLPAPER ──
+window.uploadWallpaper = async function() {
+  const title = document.getElementById('upTitle').value.trim();
+  const file = document.getElementById('fileInput').files[0];
+  if (!title) { showToast('❌ Please enter a title'); return; }
+  if (!file) { showToast('❌ Please select an image'); return; }
+
+  const btn = document.querySelector('.submit-btn');
+  btn.textContent = '⏳ Uploading...';
+  btn.disabled = true;
+
+  try {
+    // 1. Upload image to Cloudinary
+    showToast('☁️ Uploading to Cloudinary...');
+    const { url, publicId } = await uploadToCloudinary(file);
+
+    // 2. Save details to Firestore
+    showToast('💾 Saving to database...');
+    const wallData = {
+      title: title,
+      category: document.getElementById('upCat').value,
+      badge: document.getElementById('upBadge').value,
+      tags: document.getElementById('upTags').value.split(',').map(t => t.trim()).filter(Boolean),
+      imageUrl: url,
+      publicId: publicId,
+      downloads: 0,
+      createdAt: new Date().toISOString()
+    };
+
+    const docRef = await addDoc(collection(db, 'wallpapers'), wallData);
+
+    // 3. Add to local array
+    wallpapers.unshift({ id: docRef.id, t: title, c: wallData.category, badge: wallData.badge, tags: wallData.tags, dl: 0, url: url });
+    renderManageTable();
+    renderHomeGrid();
+    filterGallery();
+
+    document.getElementById('upTitle').value = '';
+    document.getElementById('upTags').value = '';
+    document.getElementById('uploadPreview').style.display = 'none';
+    document.getElementById('fileInput').value = '';
+    showToast('✅ Wallpaper uploaded successfully!');
+  } catch (err) {
+    console.error(err);
+    showToast('❌ Upload failed: ' + err.message);
+  } finally {
+    btn.textContent = '⬆ Upload Wallpaper';
+    btn.disabled = false;
+  }
+}
+
+// ── LOAD WALLPAPERS FROM FIRESTORE ──
+async function loadWallpapers() {
+  try {
+    showToast('⏳ Loading wallpapers...');
+    const q = query(collection(db, 'wallpapers'), orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    const firestoreWalls = snapshot.docs.map(doc => ({
+      id: doc.id,
+      t: doc.data().title,
+      c: doc.data().category,
+      badge: doc.data().badge || '',
+      tags: doc.data().tags || [],
+      dl: doc.data().downloads || 0,
+      url: doc.data().imageUrl,
+      isFirestore: true
+    }));
+    if (firestoreWalls.length > 0) {
+      wallpapers = [...firestoreWalls, ...seeds];
+    }
+    renderHomeGrid();
+    filterGallery();
+    renderManageTable();
+    showToast('✅ Wallpapers loaded!');
+  } catch (err) {
+    console.error('Load error:', err);
+  }
+}
+
+// ── DELETE FROM FIRESTORE ──
+window.deleteWall = async function(i) {
+  const w = wallpapers[i];
+  if (!confirm('Delete "' + w.t + '"?')) return;
+  try {
+    if (w.isFirestore) {
+      await deleteDoc(doc(db, 'wallpapers', w.id));
+    }
+    wallpapers.splice(i, 1);
+    renderManageTable(); renderHomeGrid(); filterGallery();
+    showToast('🗑 Deleted!');
+  } catch (err) {
+    showToast('❌ Delete failed: ' + err.message);
+  }
+}
+
+// ── EDIT IN FIRESTORE ──
+window.editWall = async function(i) {
+  const w = wallpapers[i];
+  const newTitle = prompt('Edit title:', w.t);
+  if (!newTitle) return;
+  try {
+    if (w.isFirestore) {
+      await updateDoc(doc(db, 'wallpapers', w.id), { title: newTitle });
+    }
+    w.t = newTitle;
+    renderManageTable(); renderHomeGrid(); filterGallery();
+    showToast('✅ Updated!');
+  } catch (err) {
+    showToast('❌ Update failed: ' + err.message);
+  }
+}
+
+// Load on start
+loadWallpapers();
+</script>
+<script>
+// ── DATA ──
+const mobileCategories = [
+  { name: 'Nature', icon: '🌿', count: 245 },
+  { name: 'Anime', icon: '⛩', count: 203 },
+  { name: 'Dark', icon: '🌑', count: 178 },
+  { name: 'Abstract', icon: '🎨', count: 312 },
+  { name: 'Sky', icon: '🌤', count: 167 },
+  { name: 'Animals', icon: '🦁', count: 221 },
+];
+const pcCategories = [
+  { name: 'Space', icon: '🚀', count: 189 },
+  { name: 'Cars', icon: '🚗', count: 156 },
+  { name: 'Minimal', icon: '◾', count: 134 },
+  { name: 'Architecture', icon: '🏛', count: 97 },
+  { name: 'Ocean', icon: '🌊', count: 143 },
+  { name: 'Mountains', icon: '⛰', count: 118 },
+];
+const categories = [...mobileCategories, ...pcCategories];
+
+// Picsum-based wallpapers (deterministic seeds = stable images)
+const seeds = [
+  {id:10,t:'Golden Horizon',c:'Nature',badge:'trending',tags:['golden','sky','nature'],dl:4821},
+  {id:20,t:'Deep Space Nebula',c:'Space',badge:'new',tags:['space','nebula','stars'],dl:3102},
+  {id:30,t:'Abstract Flow',c:'Abstract',badge:'',tags:['abstract','colorful'],dl:2340},
+  {id:40,t:'Midnight Drive',c:'Cars',badge:'trending',tags:['car','night','road'],dl:5670},
+  {id:50,t:'Cherry Blossom',c:'Anime',badge:'new',tags:['anime','sakura','spring'],dl:6120},
+  {id:60,t:'Dark Void',c:'Dark',badge:'',tags:['dark','minimal','black'],dl:1890},
+  {id:70,t:'Clean Lines',c:'Minimal',badge:'',tags:['minimal','white','clean'],dl:1450},
+  {id:80,t:'City Skyline',c:'Architecture',badge:'trending',tags:['city','urban','night'],dl:3890},
+  {id:90,t:'Lion Pride',c:'Animals',badge:'new',tags:['lion','wildlife','africa'],dl:4230},
+  {id:100,t:'Blue Hour',c:'Sky',badge:'',tags:['sky','blue','clouds'],dl:2980},
+  {id:110,t:'Ocean Waves',c:'Ocean',badge:'trending',tags:['ocean','waves','water'],dl:5140},
+  {id:120,t:'Alpine Peak',c:'Mountains',badge:'new',tags:['mountain','snow','peak'],dl:3650},
+  {id:130,t:'Forest Path',c:'Nature',badge:'',tags:['forest','green','path'],dl:2210},
+  {id:140,t:'Galaxy Core',c:'Space',badge:'trending',tags:['galaxy','stars','cosmos'],dl:7890},
+  {id:150,t:'Neon Geometry',c:'Abstract',badge:'new',tags:['neon','geometry','glow'],dl:4560},
+  {id:160,t:'Speed Beast',c:'Cars',badge:'',tags:['sports car','red','speed'],dl:6780},
+];
+
+let wallpapers = [...seeds];
+let activeCat = 'all';
+let galleryActiveCat = 'all';
+let currentWall = null;
+let isDark = false;
+
+function imgUrl(id, w=600, h=400){
+  // If it's a Cloudinary URL (string starting with http), return directly
+  if(typeof id === 'string' && id.startsWith('http')) return id;
+  // Otherwise use picsum for demo wallpapers
+  return `https://picsum.photos/seed/${id}/${w}/${h}`;
+}
+
+// ── RENDER CATS (split Mobile / PC) ──
+function renderCats(containerId, onClickFn){
+  const el = document.getElementById(containerId);
+  el.innerHTML = `
+    <div style="grid-column:1/-1;font-size:0.8rem;font-weight:700;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;padding:0.2rem 0 0.4rem;">📱 Mobile Wallpapers</div>
+    ${mobileCategories.map(c=>`
+      <div class="cat-card" onclick="${onClickFn}('${c.name}',this)">
+        <span class="cat-icon">${c.icon}</span>
+        <div class="cat-name">${c.name}</div>
+        <div class="cat-count">${c.count} walls</div>
+      </div>`).join('')}
+    <div style="grid-column:1/-1;font-size:0.8rem;font-weight:700;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;padding:1rem 0 0.4rem;">🖥 Laptop & PC Wallpapers</div>
+    ${pcCategories.map(c=>`
+      <div class="cat-card" onclick="${onClickFn}('${c.name}',this)">
+        <span class="cat-icon">${c.icon}</span>
+        <div class="cat-name">${c.name}</div>
+        <div class="cat-count">${c.count} walls</div>
+      </div>`).join('')}
+  `;
+}
+
+// ── ADMIN PASSWORD ──
+function checkAdminPwd(){
+  const val = document.getElementById('adminPwdInput').value;
+  if(val === 'fuzz wallvault'){
+    document.getElementById('adminLock').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    renderManageTable();
+  } else {
+    document.getElementById('lockErr').style.display = 'block';
+    document.getElementById('adminPwdInput').value = '';
+  }
+}
+
+// ── RENDER GRID with skeleton ──
+function showSkeletons(containerId, count=8){
+  const el = document.getElementById(containerId);
+  const heights = [200,280,220,300,180,260,240,200];
+  el.innerHTML = Array.from({length:count},(_,i)=>`
+    <div class="skeleton">
+      <div class="skeleton-img" style="height:${heights[i%heights.length]}px"></div>
+    </div>`).join('');
+}
+
+function renderGrid(containerId, walls){
+  const el = document.getElementById(containerId);
+  el.innerHTML = walls.map(w => {
+    const src = w.url ? w.url : imgUrl(w.id);
+    return `
+    <div class="wall-card" onclick="openModal('${w.id}')">
+      <img src="${src}" alt="${w.t}" loading="lazy">
+      ${w.badge ? `<span class="badge ${w.badge}">${w.badge.toUpperCase()}</span>` : ''}
+      <span class="download-count">⬇ ${(w.dl/1000).toFixed(1)}k</span>
+      <div class="wall-overlay">
+        <div class="wall-title">${w.t}</div>
+        <div class="wall-actions">
+          <button class="wall-btn download" onclick="event.stopPropagation();quickDownload('${w.id}')">⬇ Free</button>
+          <button class="wall-btn preview">👁 Preview</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── INFINITE SCROLL ──
+let galleryPage = 1;
+const PAGE_SIZE = 8;
+let isLoading = false;
+
+function getFilteredWalls(){
+  const q = document.getElementById('gallerySearch').value.toLowerCase();
+  return wallpapers.filter(w => {
+    const matchCat = galleryActiveCat==='all' || w.c===galleryActiveCat;
+    const matchQ = !q || w.t.toLowerCase().includes(q) || w.tags.some(t=>t.includes(q));
+    return matchCat && matchQ;
+  });
+}
+
+function filterGallery(){
+  galleryPage = 1;
+  const walls = getFilteredWalls();
+  showSkeletons('galleryGrid', Math.min(PAGE_SIZE, walls.length));
+  setTimeout(()=>{ renderGrid('galleryGrid', walls.slice(0, PAGE_SIZE)); }, 400);
+}
+
+function loadMoreGallery(){
+  if(isLoading) return;
+  const walls = getFilteredWalls();
+  const nextEnd = (galleryPage+1)*PAGE_SIZE;
+  if(galleryPage*PAGE_SIZE >= walls.length) return;
+  isLoading = true;
+  galleryPage++;
+  const el = document.getElementById('galleryGrid');
+  const skels = Array.from({length:Math.min(PAGE_SIZE, walls.length-el.children.length)},(_,i)=>`
+    <div class="skeleton"><div class="skeleton-img" style="height:${[200,280,220,300][i%4]}px"></div></div>`).join('');
+  el.insertAdjacentHTML('beforeend', skels);
+  setTimeout(()=>{
+    const newWalls = walls.slice(0, galleryPage*PAGE_SIZE);
+    renderGrid('galleryGrid', newWalls);
+    isLoading = false;
+  }, 500);
+}
+
+// scroll listener for infinite scroll
+window.addEventListener('scroll', ()=>{
+  const btt = document.getElementById('backToTop');
+  if(window.scrollY > 400){ btt.classList.add('visible'); } else { btt.classList.remove('visible'); }
+  if(document.getElementById('page-gallery').classList.contains('active')){
+    if(window.innerHeight + window.scrollY >= document.body.offsetHeight - 300){
+      loadMoreGallery();
+    }
+  }
+});
+
+// ── FILTER ──
+let currentFilter = 'all';
+function setFilter(f, btn){
+  currentFilter = f;
+  document.querySelectorAll('#page-home .filter-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderHomeGrid();
+}
+
+function setGalleryFilter(f, btn){
+  document.querySelectorAll('#page-gallery .filter-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  filterGallery();
+}
+
+function filterByCat(cat, btn, gridId, catsId){
+  document.querySelectorAll(`#${catsId} .cat-card`).forEach(c=>c.classList.remove('active-cat'));
+  btn.classList.toggle('active-cat');
+  if(btn.classList.contains('active-cat')){
+    activeCat = cat;
+  } else { activeCat = 'all'; }
+  renderHomeGrid();
+}
+
+function filterGalleryCat(cat, btn){
+  document.querySelectorAll('#galleryCats .cat-card').forEach(c=>c.classList.remove('active-cat'));
+  btn.classList.toggle('active-cat');
+  galleryActiveCat = btn.classList.contains('active-cat') ? cat : 'all';
+  filterGallery();
+}
+
+function renderHomeGrid(){
+  let walls = wallpapers.filter(w => activeCat==='all' || w.c===activeCat);
+  if(currentFilter==='newest') walls = [...walls].reverse();
+  if(currentFilter==='popular') walls = [...walls].sort((a,b)=>b.dl-a.dl);
+  if(currentFilter==='downloads') walls = [...walls].sort((a,b)=>b.dl-a.dl);
+  renderGrid('homeGrid', walls.slice(0,8));
+}
+
+function filterGallery(){
+  const q = document.getElementById('gallerySearch').value.toLowerCase();
+  let walls = wallpapers.filter(w => {
+    const matchCat = galleryActiveCat==='all' || w.c===galleryActiveCat;
+    const matchQ = !q || w.t.toLowerCase().includes(q) || w.tags.some(t=>t.includes(q));
+    return matchCat && matchQ;
+  });
+  renderGrid('galleryGrid', walls);
+}
+
+// ── CATS ONCLICK ──
+function homeCatClick(cat, btn){ filterByCat(cat, btn, 'homeGrid', 'homeCats'); }
+function galleryCatClick(cat, btn){ filterGalleryCat(cat, btn); }
+
+// ── SEARCH ──
+function liveSearch(q){
+  if(!q){ renderHomeGrid(); return; }
+  const walls = wallpapers.filter(w => w.t.toLowerCase().includes(q.toLowerCase()) || w.tags.some(t=>t.includes(q.toLowerCase())));
+  renderGrid('homeGrid', walls.slice(0,8));
+}
+function doSearch(){ liveSearch(document.getElementById('heroSearch').value); showPage('gallery'); }
+
+// ── MODAL ──
+function openModal(id){
+  const w = wallpapers.find(x=>String(x.id)===String(id));
+  if(!w) return;
+  currentWall = w;
+  const src = w.url ? w.url : imgUrl(w.id, 900, 500);
+  document.getElementById('modalImg').src = src;
+  document.getElementById('modalTitle').textContent = w.t;
+  document.getElementById('modalCat').textContent = w.c;
+  document.getElementById('modalRes').textContent = '4K';
+  document.getElementById('modalDL').textContent = w.dl.toLocaleString();
+  document.getElementById('modalTags').innerHTML = w.tags.map(t=>`<span class="tag">#${t}</span>`).join('');
+  const related = wallpapers.filter(x=>String(x.id)!==String(id) && x.c===w.c).slice(0,6);
+  document.getElementById('relatedGrid').innerHTML = related.map(r=>`
+    <div class="related-item" onclick="openModal('${r.id}')">
+      <img src="${r.url ? r.url : imgUrl(r.id,90,64)}" alt="${r.t}" loading="lazy">
+    </div>`).join('') || '<span style="color:var(--muted);font-size:0.8rem">No related wallpapers</span>';
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  w.dl++;
+}
+function closeModal(e){ if(e.target===document.getElementById('modal')) closeModalBtn(); }
+function closeModalBtn(){
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function downloadWall(){
+  if(!currentWall) return;
+  const a = document.createElement('a');
+  a.href = currentWall.url ? currentWall.url : imgUrl(currentWall.id, 1920, 1080);
+  a.download = currentWall.t.replace(/ /g,'_') + '.jpg';
+  a.target = '_blank'; a.click();
+  showToast('⬇ Downloading ' + currentWall.t + '!');
+  closeModalBtn();
+}
+function quickDownload(id){
+  const w = wallpapers.find(x=>String(x.id)===String(id));
+  if(!w) return;
+  const a = document.createElement('a');
+  a.href = w.url ? w.url : imgUrl(id, 1920, 1080);
+  a.download = w.t.replace(/ /g,'_') + '.jpg';
+  a.target = '_blank'; a.click();
+  showToast('⬇ Downloading ' + w.t + '!');
+  w.dl++;
+}
+function shareWall(){
+  navigator.clipboard.writeText(window.location.href + '#wall-' + currentWall?.id);
+  showToast('🔗 Link copied to clipboard!');
+}
+
+// ── ADMIN UPLOAD ──
+function previewUpload(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('uploadPreview');
+    prev.src = e.target.result; prev.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function uploadWallpaper(){
+  const title = document.getElementById('upTitle').value.trim();
+  if(!title){ showToast('❌ Please enter a title'); return; }
+  const newId = Date.now() % 9999 + 200;
+  const newWall = {
+    id: newId,
+    t: title,
+    c: document.getElementById('upCat').value,
+    badge: document.getElementById('upBadge').value,
+    tags: document.getElementById('upTags').value.split(',').map(t=>t.trim()).filter(Boolean),
+    dl: 0,
+  };
+  wallpapers.unshift(newWall);
+  renderManageTable();
+  renderHomeGrid();
+  filterGallery();
+  document.getElementById('upTitle').value = '';
+  document.getElementById('upTags').value = '';
+  document.getElementById('uploadPreview').style.display = 'none';
+  showToast('✅ Wallpaper uploaded!');
+}
+
+function renderManageTable(){
+  const q = (document.getElementById('adminSearchInput')?.value || '').toLowerCase();
+  const tbody = document.getElementById('manageTable');
+  const filtered = wallpapers.filter((w,i)=> !q || w.t.toLowerCase().includes(q) || w.c.toLowerCase().includes(q));
+  tbody.innerHTML = filtered.slice(0,20).map((w) => {
+    const i = wallpapers.indexOf(w);
+    return `<tr>
+      <td><input type="checkbox" class="tbl-check row-check" data-idx="${i}"></td>
+      <td><img src="${w.url ? w.url : imgUrl(w.id,56,40)}" alt="${w.t}"></td>
+      <td>${w.t}</td>
+      <td>${w.c}</td>
+      <td>${w.dl.toLocaleString()}</td>
+      <td>
+        <button class="tbl-btn edit" onclick="editWall(${i})">✏ Edit</button>
+        <button class="tbl-btn del" onclick="deleteWall(${i})">🗑 Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleCheckAll(cb){
+  document.querySelectorAll('.row-check').forEach(c=>c.checked=cb.checked);
+}
+
+function bulkDelete(){
+  const checked = [...document.querySelectorAll('.row-check:checked')];
+  if(!checked.length){ showToast('⚠ Select wallpapers first'); return; }
+  if(!confirm(`Delete ${checked.length} selected wallpaper(s)?`)) return;
+  const idxs = checked.map(c=>parseInt(c.dataset.idx)).sort((a,b)=>b-a);
+  idxs.forEach(i=>wallpapers.splice(i,1));
+  renderManageTable(); renderHomeGrid(); filterGallery();
+  showToast(`🗑 Deleted ${idxs.length} wallpaper(s)`);
+}
+
+function editWall(i){
+  const w = wallpapers[i];
+  const newTitle = prompt('Edit title:', w.t);
+  if(newTitle){ w.t = newTitle; renderManageTable(); renderHomeGrid(); filterGallery(); showToast('✅ Updated!'); }
+}
+function deleteWall(i){
+  if(confirm('Delete "' + wallpapers[i].t + '"?')){
+    wallpapers.splice(i,1);
+    renderManageTable(); renderHomeGrid(); filterGallery(); showToast('🗑 Deleted');
+  }
+}
+
+// ── CONTACT ──
+function sendMsg(){ showToast('📨 Message sent to ractail07@gmail.com!'); }
+
+// ── PAGES ──
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const navEl = document.getElementById('nav-'+name);
+  if(navEl) navEl.classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+  if(name==='gallery') filterGallery();
+  if(name==='admin'){
+    // reset lock every time admin page is visited
+    document.getElementById('adminLock').style.display = 'block';
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('adminPwdInput').value = '';
+    document.getElementById('lockErr').style.display = 'none';
+  }
+}
+
+// ── THEME ──
+function toggleTheme(){
+  isDark = !isDark;
+  document.body.classList.toggle('dark', isDark);
+  document.querySelector('.theme-btn').textContent = isDark ? '☀' : '🌙';
+}
+
+// ── TOAST ──
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(()=>{ t.style.display='none'; }, 2500);
+}
+
+// ── INIT ──
+renderCats('homeCats', 'homeCatClick');
+renderCats('galleryCats', 'galleryCatClick');
+renderHomeGrid();
+filterGallery();
+renderManageTable();
+</script>
+</body>
+</html>
