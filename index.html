@@ -832,7 +832,7 @@ function sendMsg(){
   if(!name || !email || !message){ showToast('❌ Please fill all fields'); return; }
   const btn = document.getElementById('contactBtn');
   btn.textContent = '⏳ Sending...'; btn.disabled = true;
-  emailjs.send('Fuzz - WallVault', '5dr8o0c', { name, email, message, title: 'WallVault Contact' })
+  emailjs.send('Fuzz - WallVault', 'template_5dr8o0c', { name, email, message, title: 'WallVault Contact' })
     .then(() => {
       showToast('📨 Message sent successfully!');
       document.getElementById('contactName').value = '';
