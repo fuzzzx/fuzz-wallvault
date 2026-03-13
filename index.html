@@ -832,7 +832,14 @@ function sendMsg(){
   if(!name || !email || !message){ showToast('❌ Please fill all fields'); return; }
   const btn = document.getElementById('contactBtn');
   btn.textContent = '⏳ Sending...'; btn.disabled = true;
-  emailjs.send('Fuzz - WallVault', 'template_5dr8o0c', { name, email, message, title: 'WallVault Contact' })
+  emailjs.send('Fuzz - WallVault', 'template_y385fcx', {
+      from_name: name,
+      from_email: email,
+      message: message,
+      name: name,
+      email: email,
+      title: 'WallVault Contact Form'
+    })
     .then(() => {
       showToast('📨 Message sent successfully!');
       document.getElementById('contactName').value = '';
